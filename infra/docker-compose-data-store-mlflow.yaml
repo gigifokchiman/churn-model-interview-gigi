@@ -80,8 +80,8 @@ services:
       /bin/sh -c "
       mc alias set myminio http://mlflow-artifact-minio:9000 minio minio123 &&
       mc mb myminio/mlflow-artifacts --ignore-existing &&
-      mc policy set public myminio/mlflow-artifacts
       mc mb myminio/data-staging --ignore-existing &&
+      mc policy set public myminio/mlflow-artifacts &&
       mc policy set public myminio/data-staging
       "
     networks:
