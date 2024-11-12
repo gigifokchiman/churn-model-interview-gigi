@@ -1,9 +1,8 @@
-import logging
-import os
 from datetime import datetime
+import logging
 
 from src.data.data_generator import give_me_some_data
-from src.pipelines.config import ModelConfig
+from src.pipelines.config import ModelConfig, get_config
 from src.utils.saving_data_minio import save_to_minio
 
 # Configure logging
@@ -22,8 +21,7 @@ if __name__ == "__main__":
     try:
         # Load configuration from YAML file
         logger.info("Loading configuration...")
-        config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
-        config = ModelConfig.from_yaml(config_path)
+        config = get_config()
         logger.info("Configuration loaded successfully")
 
         # Generate and save training data
@@ -32,7 +30,7 @@ if __name__ == "__main__":
         train_df = give_me_some_data(random_seed=random_seed)
         logger.info(f"Training data generated: {train_df.shape[0]} rows, {train_df.shape[1]} columns")
 
-        train_path = save_to_minio(train_df, "training_data.csv")
+        train_path = save_to_minio(train_df, config.training_params["dataset"])
         logger.info(f"Training data saved to: {train_path}")
 
         # Generate and save testing data
@@ -41,7 +39,7 @@ if __name__ == "__main__":
         test_df = give_me_some_data(random_seed=random_seed)
         logger.info(f"Testing data generated: {test_df.shape[0]} rows, {test_df.shape[1]} columns")
 
-        test_path = save_to_minio(test_df, "testing_data.csv")
+        test_path = save_to_minio(test_df, config.testing_params["dataset"])
         logger.info(f"Testing data saved to: {test_path}")
 
         logger.info("Data generation and saving process completed successfully")

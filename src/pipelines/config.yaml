@@ -1,0 +1,17 @@
+model_params:
+  model_type: "xgboost"
+
+training_params:
+  dataset: training_data.csv
+  random_seed: 31459
+  batch_size: 32
+  epochs: 100
+  learning_rate: 0.01
+  optimizer: "adam"
+
+inference_params:
+  threshold: 0.5
+  
+testing_params:
+  dataset: training_data.csv
+  random_seed: 42
