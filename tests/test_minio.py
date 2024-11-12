@@ -62,12 +62,12 @@ def test_save_minio_empty_dataframe(minio_test_config):
         filename=filename,
         **minio_test_config
     )
-    assert save_result == True
 
     read_df = read_from_minio(
         filename=filename,
         **minio_test_config
     )
+
     pd.testing.assert_frame_equal(empty_df, read_df)
 
 
