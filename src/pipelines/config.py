@@ -8,9 +8,12 @@ from pathlib import Path
 @dataclass
 class ModelConfig:
     model_params: Dict[str, Any]
+    training_data: Dict[str, Any]
+    testing_data: Dict[str, Any]
     training_params: Dict[str, Any]
     testing_params: Dict[str, Any]
     inference_params: Dict[str, Any]
+
 
     @classmethod
     def from_yaml(cls, config_path: str) -> 'ModelConfig':
@@ -51,6 +54,8 @@ class ModelConfig:
 
             return cls(
                 model_params=config['model_params'],
+                training_data=config['training_data'],
+                testing_data=config['testing_data'],
                 training_params=config['training_params'],
                 testing_params=config['testing_params'],
                 inference_params=config['inference_params']

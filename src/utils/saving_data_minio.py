@@ -1,10 +1,74 @@
-from minio import Minio
-import pandas as pd
-from io import BytesIO
-from typing import Optional, Union
 import logging
+from io import BytesIO
+from typing import Dict
+
+import pandas as pd
+import json
+from minio import Minio
 
 logger = logging.getLogger(__name__)
+
+
+def save_json_to_minio(
+    data: Dict,
+    filename: str,
+    bucket: str = "data-staging",
+    minio_host: str = "localhost:9000",
+    minio_access_key: str = "minio",
+    minio_secret_key: str = "minio123",
+    secure: bool = False
+) -> str:
+    """
+    Save a dictionary as JSON to MinIO storage.
+
+    Args:
+        data (Dict): Dictionary to save as JSON
+        filename (str): Name of the file to save (include .json extension)
+        bucket (str): MinIO bucket name
+        minio_host (str): MinIO host address
+        minio_access_key (str): MinIO access key
+        minio_secret_key (str): MinIO secret key
+        secure (bool): Whether to use HTTPS
+
+    Returns:
+        str: Path to the saved file in MinIO
+
+    Raises:
+        Exception: If there's an error saving the file
+    """
+    try:
+        logger.info(f"Initializing MinIO client for host: {minio_host}")
+        # Initialize MinIO client
+        client = Minio(
+            minio_host,
+            access_key=minio_access_key,
+            secret_key=minio_secret_key,
+            secure=secure
+        )
+
+        logger.info(f"Converting dictionary to JSON")
+        # Convert dict to JSON bytes
+        json_str = json.dumps(data)
+        json_bytes = json_str.encode('utf-8')
+        json_buffer = BytesIO(json_bytes)
+
+        logger.info(f"Uploading file {filename} to bucket {bucket}")
+        # Upload to MinIO
+        client.put_object(
+            bucket,
+            filename,
+            json_buffer,
+            length=len(json_bytes),
+            content_type='application/json'
+        )
+
+        path = f"minio://{bucket}/{filename}"
+        logger.info(f"Successfully saved JSON file to: {path}")
+        return path
+
+    except Exception as e:
+        logger.error(f"Error saving JSON to MinIO: {str(e)}", exc_info=True)
+        raise Exception(f"Error saving JSON to MinIO: {str(e)}")
 
 
 def save_to_minio(

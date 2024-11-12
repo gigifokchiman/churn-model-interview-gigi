@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
         # Generate and save training data
         logger.info("Generating training data...")
-        random_seed = config.training_params["random_seed"]
+        random_seed = config.training_data.get("random_seed")
         train_df = give_me_some_data(random_seed=random_seed)
         logger.info(f"Training data generated: {train_df.shape[0]} rows, {train_df.shape[1]} columns")
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
         # Generate and save testing data
         logger.info("Generating testing data...")
-        random_seed = config.testing_params["random_seed"]
+        random_seed = config.testing_data.get("random_seed")
         test_df = give_me_some_data(random_seed=random_seed)
         logger.info(f"Testing data generated: {test_df.shape[0]} rows, {test_df.shape[1]} columns")
 
