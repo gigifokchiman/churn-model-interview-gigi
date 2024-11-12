@@ -1,17 +1,18 @@
-import unittest
-import mlflow
-import pandas as pd
-import numpy as np
 import os
-import tempfile
 import random
-import string
 import shutil
+import string
+import tempfile
+import unittest
+
+import matplotlib.pyplot as plt
+import mlflow
+import numpy as np
+import pandas as pd
+import pytest
 from mlflow.tracking import MlflowClient
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
-import pytest
 
 # Common environment setup (for local testing only).
 os.environ['MLFLOW_S3_ENDPOINT_URL'] = 'http://localhost:9000'
