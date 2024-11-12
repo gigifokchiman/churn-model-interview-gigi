@@ -1,21 +1,15 @@
-from datetime import datetime
 import logging
 
 from src.data.data_generator import give_me_some_data
-from src.pipelines.config import ModelConfig, get_config
+from src.pipelines.config import get_config
+from src.utils.logger import setup_logger
 from src.utils.saving_data_minio import save_to_minio
 
 # Configure logging
-log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(
-    level=logging.WARNING,
-    format=log_format,
-    handlers=[
-        logging.FileHandler(f'data_generation_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
-        logging.StreamHandler()
-    ]
+logger = setup_logger(
+    name=__name__,
+    level=logging.ERROR,
 )
-logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     try:
