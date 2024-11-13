@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from locale import locale_alias
 from typing import Dict, Tuple
 
 import joblib
@@ -7,6 +8,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from xgboost.sklearn import XGBClassifier
+from minio import Minio
 
 from src.utils.logger import setup_logger
 
@@ -19,6 +21,12 @@ class ChurnModelTrainer:
         self.training_columns = None
         self.label_column = None
         self.imputation_params = None
+        self.minio_client = Minio(
+            endpoint=os.environ["MLFLOW_S3_ENDPOINT_URL"].replace("http://", ""),
+            access_key=os.environ["AWS_ACCESS_KEY_ID"],
+            secret_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+            secure=False
+        )
 
     def prepare_data(self, df: pd.DataFrame) -> Tuple:
         """
@@ -106,16 +114,31 @@ class ChurnModelTrainer:
             self.logger.error(error_msg, exc_info=True)
             raise RuntimeError(error_msg)
 
-    def load_artifacts(self, output_dir) -> \
-        tuple[Dict, Dict[str, float], Dict[str, float], Dict]:
+    def load_artifacts(self, output_dir) -> tuple[Dict, Dict[str, float], Dict[str, float], Dict]:
         """Load model artifacts and metrics"""
         self.logger.info("Loading artifacts...")
 
-        model_path = os.path.join(output_dir, f'model.pkl')
-        training_metrics_path = os.path.join(output_dir, f'training_metrics.json')
-        testing_metrics_path = os.path.join(output_dir, f'testing_metrics.json')
-        imputation_params_path = os.path.join(output_dir, f'inputation_params.json')
-    
+        files = {
+            'model': 'model.pkl',
+            'training_metrics': 'training_metrics.json',
+            'testing_metrics': 'testing_metrics.json',
+            'inputation_params': 'inputation_params.json'
+        }
+
+        # Download all files
+        local_dir = "/app/artifacts"
+        for s3_object, filename in files.items():
+            s3_path = f"{output_dir}/{filename}"
+            local_path = os.path.join(local_dir, filename)
+
+            self.logger.info(f"Downloading {s3_path} to {local_path}")
+            self.minio_client.fget_object("mlflow-artifacts", s3_path, local_path)
+
+        model_path = os.path.join(local_dir, 'model.pkl')
+        training_metrics_path = os.path.join(local_dir, 'training_metrics.json')
+        testing_metrics_path = os.path.join(local_dir, 'testing_metrics.json')
+        imputation_params_path = os.path.join(local_dir, 'inputation_params.json')
+
         try:
             # Load model and related data
             model_data = joblib.load(model_path)
