@@ -1,0 +1,99 @@
+services:
+  postgres-db:
+    container_name: postgres-db
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ml_user
+      POSTGRES_PASSWORD: ml_password
+      POSTGRES_DB: ml_data
+    volumes:
+      - volumes-postgres-db:/var/lib/postgresql/data
+      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ml_user -d ml_data" ]
+      interval: 5s
+      retries: 5
+    networks:
+      - db_net
+
+  mlflow:
+    image: bitnami/mlflow:latest
+    container_name: ml_tracking
+    ports:
+      - "15000:8080"
+    networks:
+      - db_net
+    environment:
+      - MLFLOW_SERVE_ARTIFACTS=true
+      - AWS_ACCESS_KEY_ID=minio
+      - AWS_SECRET_ACCESS_KEY=minio123
+      - MLFLOW_S3_ENDPOINT_URL=http://mlflow-artifact-minio:9000
+      - MLFLOW_S3_IGNORE_TLS=true
+    command:
+      - /opt/bitnami/python/bin/mlflow
+      - server
+      - --host=0.0.0.0
+      - --port=8080
+      - --backend-store-uri=postgresql://ml_user:ml_password@postgres-db:5432/ml_data
+      - --default-artifact-root=s3://mlflow-artifacts/
+    volumes:
+      - mlflow_data:/mlruns
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      mlflow-artifact-minio:
+        condition: service_healthy
+
+  mlflow-artifact-minio:
+    container_name: mlflow-artifact-minio
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+      MINIO_DOMAIN: minio
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - volumes-mlflow-artifact-minio:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - db_net
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  mc-init:
+    image: minio/mc
+    depends_on:
+      mlflow-artifact-minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://mlflow-artifact-minio:9000 minio minio123 &&
+      mc mb myminio/mlflow-artifacts --ignore-existing &&
+      mc mb myminio/data-staging --ignore-existing &&
+      mc mb myminio/ml-result --ignore-existing &&
+      mc policy set public myminio/mlflow-artifacts &&
+      mc policy set public myminio/ml-result &&
+      mc policy set public myminio/data-staging
+      "
+    networks:
+      - db_net
+
+networks:
+  db_net:
+    driver: bridge
+
+volumes:
+  volumes-postgres-db:
+  mlflow_data:
+  volumes-mlflow-artifact-minio:

@@ -1,4 +1,7 @@
 # %%
+
+import sys
+print(sys.path)
 from typing import Callable
 
 from icecream import ic
