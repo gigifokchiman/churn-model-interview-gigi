@@ -5,6 +5,7 @@ from datetime import datetime
 import logging
 from typing import Dict
 
+
 class ModelMonitor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)

@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from databricks.sdk.service.pipelines import ReportSpec
 from pyarrow import timestamp
@@ -59,7 +61,7 @@ class ChurnPredictor:
 
 if __name__ == "__main__":
     # Initialize configurations and services
-    predictor = ChurnPredictor("xgboost_20241113_045811")
+    predictor = ChurnPredictor(artifacts_dir=os.environ["ARTIFACTS_DIR"])
     config = get_config()
 
     # Load and preprocess data
