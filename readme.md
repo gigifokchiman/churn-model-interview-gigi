@@ -123,6 +123,12 @@ updates without rebuilds but requires additional infrastructure and handling of 
 
 ## Additional notes
 
+### About the secrets
+
+Note that all secrets are for local testing purposes.
+In production, all secrets should be stored in service like secret managers/ stores.
+
+
 ### About XGBoost
 
 If you encounter `libomp` related errors, refer the installation script at `scripts/setup/setup_mac.sh`. Mac do not
