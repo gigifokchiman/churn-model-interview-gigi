@@ -21,4 +21,4 @@ RUN mkdir /app/artifacts
 ENV PYTHONPATH=/app
 
 # Default command
-CMD ["python", "-m", "src.pipelines.data_pipeline"]
+CMD ["python", "-m", "src.pipelines.inferencing_pipeline"]
