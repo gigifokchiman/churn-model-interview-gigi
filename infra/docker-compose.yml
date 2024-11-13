@@ -1,0 +1,8 @@
+include:
+  - docker-compose-data-store-mlflow.yaml
+
+networks:
+  db_net:
+    driver: bridge
+
+

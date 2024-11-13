@@ -1,0 +1,24 @@
+model_params:
+  experiment_name: churn_model
+  run_name: xgboost
+  
+training_data:
+  random_seed: 31459
+
+testing_data:
+  random_seed: 42
+
+training_params:
+  model:
+    random_seed: 31459
+  dataset: training_data.csv
+
+testing_params:
+  dataset: training_data.csv
+  run_id: c0113f819fa549819c8ba19695fdbdc0
+  artifacts_path: s3://mlflow-artifacts/163/c0113f819fa549819c8ba19695fdbdc0/artifacts/
+  
+inference_params:
+  threshold: 0.5
+  
+
