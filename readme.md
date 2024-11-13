@@ -94,7 +94,7 @@ Automating the training pipeline upon model or training data changes can be done
     - The compute source can be ECS or other container based solution to run the dockers.
     - If ECS is used, the trigger initiates a new task from the latest task definition under a train service
       pre-configured int the ECS.
-- Notification can be added as well.
+- Notification can be added as well, e.g. SNS, for alerts. 
 
 ### Inferencing
 
