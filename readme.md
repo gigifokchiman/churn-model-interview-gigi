@@ -7,7 +7,6 @@ Data Scientists can explore the mlops work by pushing to the dev branch.
 
 Key features include mlflow experiment tracking and docker for inferencing.
 
-
 ## Project Structure
 ├── src/
 │ ├── data/ # Data loading and preprocessing
@@ -20,6 +19,13 @@ Key features include mlflow experiment tracking and docker for inferencing.
 ├── notebooks/ # Jupyter notebooks for exploration
 ├── .github/workflows/ # GitHub Actions workflows
 └── docker/ # Dockerfile and compose files
+
+## What can you explore?
+- The notebooks folder is not linked to any further actions. That means it is the place where you can freely explore.
+- If you want to make changes and see how the retraining pipeline and inferencing pipeline works, src is the folder. 
+- You can apply your changes to the developing environment by
+1) Commiting  changes to any feature branch (features/xx branch) for your own experiments
+2) Submitting a pull request to the "dev" branch. 
 
 ## Environment setup
 ### Prerequisites
@@ -44,7 +50,7 @@ MLFLOW_TRACKING_URI=http://localhost:15000
 ```
 
 To set up the mlflow tracking and minIO (local testing of AWS S3)
-```bash
+```bashK
 cd infra
 docker compose -f docker-compose.yml up -d
 ```
