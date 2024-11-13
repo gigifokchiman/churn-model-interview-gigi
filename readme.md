@@ -3,9 +3,7 @@
 ## Overview
 
 This project implements a machine learning pipeline for predicting customer churn. The pipeline includes data
-processing, model training, experiment tracking, inference, and monitoring capabilities. Data Scientists can explore the
-mlops work by pushing to the `dev` branch. All processes are Containerized with Docker and automated using GitHub
-Actions.
+processing, model training, experiment tracking, inference, and monitoring capabilities.
 
 ## Project Structure
 
@@ -65,6 +63,10 @@ docker build -t churn-model-inference -f Dockerfile.inference .
 docker run --network host churn-model-train python -m src.pipelines.data_pipeline
 ```
 
+The data generation part here is to mock an aggregated dataset, where the source data can come from a data warehouse.
+Using the default config, one training and one inferencing dataset are stored in MinIO (bucket: data-staging)
+as csvs for human-readability and easy handling.
+
 ### Model training
 
 - To run the training pipeline:
@@ -73,7 +75,26 @@ docker run --network host churn-model-train python -m src.pipelines.data_pipelin
 docker run --network host churn-model-train
 ```
 
-- Automating the training pipeline upon model or training data changes can be done in these ways:
+Data scientists can play around the src/pipelines/config.yaml to change how they want to train the model.
+
+The output of the models include
+
+- Artifacts, metrics, parameters are tracked by mlflow from the link: http://localhost:15000/
+- The artifacts are stored in MinIO (bucket: mlflow_artifacts)
+
+Automating the training pipeline upon model or training data changes can be done in these ways:
+
+- Triggers
+    - Data change triggers can be sourced from S3 events to trigger to run dockerfile.train when there is a new dataset
+      file is added to the bucket / prefix.
+    - Code change triggers can be done by CI/CD work to detect changes to the src folder in dev branch.
+- Container registries
+    - ECR is a good choice to store the docker images.
+- Compute
+    - The compute source can be ECS or other container based solution to run the dockers.
+    - If ECS is used, the trigger initiates a new task from the latest task definition under a train service
+      pre-configured int the ECS.
+- Notification can be added as well.
 
 ### Inferencing
 
@@ -81,12 +102,24 @@ To run the inference pipeline:
 
 ```bash
 docker run --network host \
- --env-file src/pipelines/.env.test \
- -e ARTIFACTS_DIR="1/7b57243eebb14207ab25ab3190dbb5c5/artifacts" \ 
- churn-model-inference
+  --env-file src/pipelines/.env.test \
+  -e ARTIFACTS_DIR="163/9efc2331f736430fbcaf744aadf90e06/artifacts" \
+  churn-model-inference
 ```
 
-`ARTIFACTS_DIR` is the directory where the model artifacts are stored in MinIO.
+`ARTIFACTS_DIR` is the directory where the model artifacts are stored in MinIO with the format {Experiment ID}/{Run
+ID}/artifacts
+You can copy the id from the mlflow ui: http://localhost:15000/ and pick the best run.
+![img.png](img.png)
+
+The pipeline generates the result csv and a health metrics report stored into bucket ml-result in MinIO.
+
+Automating the inferencing pipeline is similar to how we automate the training pipeline.
+
+For baked-in artifacts, include model files directly in the Docker image during build time which ensures self-contained
+deployments but requires rebuilding images for whatever updates.
+For separate storage, keep model artifacts in S3/MinIO/storage and download them at runtime which allows flexible model
+updates without rebuilds but requires additional infrastructure and handling of external dependencies.
 
 ## Additional notes
 
@@ -97,7 +130,13 @@ support GPU-accelerated XGBoost, we should use the CPU version instead.
 
 ### Scaling
 
-Spark for data pipeline
+- Distributed computation can be considered with additional work, e.g. use spark-based compute for data pipelines. 
+- The dataset needs to be distributed across machines. The machines can be scaled out to provide more computation. 
+
+### Mini-batch inferencing / close to real-time inferencing
+- The scoring methods should be improved to handle small batches efficiently. 
+- The health metrics may be separated out from the inferencing as the scoring and monitoring now may have different lifecycles.
+  - Availability of the "ground truth" in production or delayed responses.
 
 ## Appendix
 
